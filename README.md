@@ -1,1 +1,5 @@
-In this example I have created a REST web-service which stores some data about the books in the MongoDB database and will retrieve those data in the JSON format. I have used Openshift cloud platform to host the web application. 
+In this repo, mysql is used to store data on developer profiles. An end point /list is provided with a queryparam type which can accept values such as pdf,xml and json.
+
+Jersey is the jax-rs implementation used to develop the rest end point.
+
+Jerry is used as the HTTP server
