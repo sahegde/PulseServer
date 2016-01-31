@@ -37,7 +37,7 @@ public class MysqlDatabaseHelper {
 		Connection conn = getConnection();
 		Statement stmt = conn.createStatement();
 
-		String sql = "SELECT * FROM LearnHub";
+		String sql = "SELECT * FROM profiles";
 		
 		ResultSet rs = stmt.executeQuery(sql);
 
