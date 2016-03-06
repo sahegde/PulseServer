@@ -2,4 +2,4 @@ In this repo, mysql is used to store data on developer profiles. An end point /l
 
 Jersey is the jax-rs implementation used to develop the rest end point.
 
-Jerry is used as the HTTP server
+Jetty is used as the HTTP server
