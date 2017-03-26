@@ -20,6 +20,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.json.JSONArray;
@@ -220,5 +221,17 @@ public class ResourceController {
 			return Response.status(401).build();
 		}
 	}
+	
+    @GET  
+    @Path("/streaming_data/download")  
+    @Produces("text/plain")  
+    public Response getFile() {  
+        File file = new File("/Users/hsandeep/Desktop/gitRepos/astroDataGen/Jersey-Jetty-Mysql-REST/src/main/resources/streamingData.txt");  
+   
+        ResponseBuilder response = Response.ok((Object) file);  
+        response.header("Content-Disposition","attachment; filename=\"streamingData.txt\"");  
+        return response.build();  
+   
+    }  
 	
 }
