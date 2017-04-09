@@ -9,22 +9,31 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class RestHelper {
-	private static String fileName = "/Users/hsandeep/Desktop/gitRepos/astroDataGen/Jersey-Jetty-Mysql-REST/src/main/resources/loginData.txt";
-	private static Map<String,String> loginMap = new HashMap<String, String>();
-	
-	public static Map<String,String> getLoginContents() {
+	private static Map<String, String> loginMap = new HashMap<String, String>();
+
+	public static Map<String, String> getLoginContents() {
+		String osType = System.getProperty("os.name");
+		System.out.println("Operating system type: "+osType);
+		int type = -1;
+		if(osType.contains("Mac")) {
+			type = 0;
+		}else if(osType.contains("Windows")) {
+			type = 1;
+		}
+		new FileLocationHandler(type);
+		
 		BufferedReader br = null;
 		FileReader fr = null;
 		try {
-			fr = new FileReader(fileName);
+			fr = new FileReader(FileLocationHandler.loginFileName);
 			br = new BufferedReader(fr);
 
 			String sCurrentLine;
 
-			br = new BufferedReader(new FileReader(fileName));
+			br = new BufferedReader(new FileReader(FileLocationHandler.loginFileName));
 
 			while ((sCurrentLine = br.readLine()) != null) {
-				String []loginArgs = sCurrentLine.split(" ");
+				String[] loginArgs = sCurrentLine.split(" ");
 				loginMap.put(loginArgs[0], loginArgs[1]);
 			}
 		} catch (IOException e) {
@@ -41,16 +50,33 @@ public class RestHelper {
 		}
 		return loginMap;
 	}
-	
-	public static boolean writeLoginCredential(String username, String password) {
 
+	public static boolean writeLoginCredential(String username, String password, String confirmpassword) {
+
+		String osType = System.getProperty("os.name");
+		System.out.println("Operating system type: "+osType);
+		int type = -1;
+		if(osType.contains("Mac")) {
+			type = 0;
+		}else if(osType.contains("Windows")) {
+			type = 1;
+		}
+		new FileLocationHandler(type);
+		
 		BufferedWriter bw = null;
 		FileWriter fw = null;
 
+		if (password.equals(confirmpassword)) {
+			System.out.println("Passwords match, please login");
+		} else {
+			System.out.println("Sign up has issues: Password and Confirm Password do not match");
+			return false;
+		}
+
 		try {
-			fw = new FileWriter(fileName,true);
+			fw = new FileWriter(FileLocationHandler.loginFileName, true);
 			bw = new BufferedWriter(fw);
-			bw.write(username+" "+password);
+			bw.write(username + " " + password);
 			bw.newLine();
 			System.out.println("Done");
 		} catch (IOException e) {
@@ -71,5 +97,4 @@ public class RestHelper {
 		}
 		return true;
 	}
-	
 }
