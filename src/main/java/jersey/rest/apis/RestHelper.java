@@ -12,6 +12,9 @@ public class RestHelper {
 	private static Map<String, String> loginMap = new HashMap<String, String>();
 
 	public static Map<String, String> getLoginContents() {
+		System.out.println("Hi2");
+		new FileLocationHandler(1);
+		
 		String osType = System.getProperty("os.name");
 		System.out.println("Operating system type: "+osType);
 		int type = -1;
@@ -52,7 +55,8 @@ public class RestHelper {
 	}
 
 	public static boolean writeLoginCredential(String username, String password, String confirmpassword) {
-
+		System.out.println("Hi1");
+		new FileLocationHandler(1);
 		String osType = System.getProperty("os.name");
 		System.out.println("Operating system type: "+osType);
 		int type = -1;

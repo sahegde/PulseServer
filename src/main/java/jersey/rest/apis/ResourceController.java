@@ -14,8 +14,10 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -57,7 +59,24 @@ public class ResourceController {
 	
 	private static final Map<Integer,String> parameters = new HashMap<Integer, String>();
 	
+	private static FileLocationHandler fHandler;
+	
+	private static final Map<String,String> parametersForGraph = new HashMap<String, String>();
+	
+	private static final Map<String,String> parameterRangeMap = new HashMap<String,String>();
+	
 	public ResourceController() {
+		
+		String osType = System.getProperty("os.name");
+		System.out.println("Operating system type: "+osType);
+		int type = -1;
+		if(osType.contains("Mac")) {
+			type = 0;
+		}else if(osType.contains("Windows")) {
+			type = 1;
+		}
+		fHandler = new FileLocationHandler(type);
+		
 		healthColorMap.put(0,"green");
 		healthColorMap.put(1, "red");
 		healthColorMap.put(2, "yellow");
@@ -106,15 +125,27 @@ public class ResourceController {
 		parameters.put(9, "Body Strength");
 		parameters.put(10, "Body Oxygen Level");
 		
-		String osType = System.getProperty("os.name");
-		System.out.println("Operating system type: "+osType);
-		int type = -1;
-		if(osType.contains("Mac")) {
-			type = 0;
-		}else if(osType.contains("Windows")) {
-			type = 1;
-		}
-		new FileLocationHandler(type);
+		parameterRangeMap.put("1", "60,120");
+		parameterRangeMap.put("2", "100,140");
+		parameterRangeMap.put("13", "60,90");
+		parameterRangeMap.put("3", "12,18");
+		parameterRangeMap.put("4", "79,140");
+		parameterRangeMap.put("5", "50,300");
+		parameterRangeMap.put("6", "36,38");
+		parameterRangeMap.put("7", "20,30");
+		parameterRangeMap.put("8", "50,100");
+		parameterRangeMap.put("9", "60,100");
+		
+		parametersForGraph.put("1", "Heart Rate");
+		parametersForGraph.put("2", "Bloob Pressure-systolic");
+		parametersForGraph.put("13", "Bloob Pressure-diastolic");
+		parametersForGraph.put("3", "Respiration Rate");
+		parametersForGraph.put("4", "Blood Glucose");
+		parametersForGraph.put("5", "Activity Count");
+		parametersForGraph.put("6", "Body Temperature");
+		parametersForGraph.put("7", "Body Fat Percentage");
+		parametersForGraph.put("8", "Body Strength");
+		parametersForGraph.put("9", "Body Oxygen Level");
 	}
 
 	@POST
@@ -122,7 +153,7 @@ public class ResourceController {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response storeHistoricalFileData(
 			@com.sun.jersey.multipart.FormDataParam("file") InputStream uploadedInputStream) {
-
+		
 		try {
 			File file = new File(FileLocationHandler.modelFileLocation);
 			deleteDir(file); // Invoke recursive method
@@ -177,7 +208,7 @@ public class ResourceController {
 				}
 			}
 
-			Process p = Runtime.getRuntime().exec(FileLocationHandler.bashLocation1);
+			Process p = Runtime.getRuntime().exec("cmd /c start "+ FileLocationHandler.bashLocation1);
 
 			final BufferedReader is = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			String line;
@@ -261,7 +292,7 @@ public class ResourceController {
 		}
 		
 		try {
-			Runtime.getRuntime().exec("nohup "+FileLocationHandler.bashLocation2+" &");
+			Runtime.getRuntime().exec("cmd /c start "+ FileLocationHandler.bashLocation2);
 			System.out.println("Command execution started");
 			/*final BufferedReader is = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			String line;
@@ -282,97 +313,6 @@ public class ResourceController {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response stopHealthMonitoring() {
 		return Response.status(200).build();
-	}
-
-	@GET
-	@Path("/health-data")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response fetchGraphData(@Context UriInfo ui) {
-		MultivaluedMap<String, String> queryParams = ui.getQueryParameters();
-
-		int metricTimeFrame = Integer.parseInt(queryParams.getFirst("time_frame"));
-		List<String> metricTypes = Arrays.asList(queryParams.getFirst("metric_types").split(","));
-
-		List<JSONArray> jMetric = new ArrayList<JSONArray>();
-		for (int i = 0; i < metricTypes.size(); i++) {
-			jMetric.add(new JSONArray());
-		}
-
-		int counter = 0;
-		JSONObject jUberObj = new JSONObject();
-		if (metricTimeFrame == 5) {
-			if (metricTypes.contains("temperature")) {
-				JSONArray jArr = jMetric.get(counter++);
-				jArr.put("35");
-				jArr.put("34");
-				jArr.put("33");
-				jArr.put("33");
-				jArr.put("34");
-
-				JSONObject jObj = new JSONObject();
-				jObj.put("units", "degrees");
-				jObj.put("measurements", jArr);
-
-				jUberObj.put("temperature", jObj);
-			}
-
-			if (metricTypes.contains("oxygen_level")) {
-				JSONArray jArr = jMetric.get(counter++);
-				jArr.put("60");
-				jArr.put("61");
-				jArr.put("62");
-				jArr.put("61");
-				jArr.put("60");
-
-				JSONObject jObj = new JSONObject();
-				jObj.put("units", "mm HG");
-				jObj.put("measurements", jArr);
-
-				jUberObj.put("oxygen_level", jObj);
-			}
-		} else if (metricTimeFrame == 10) {
-			if (metricTypes.contains("temperature")) {
-				JSONArray jArr = jMetric.get(counter++);
-				jArr.put("35");
-				jArr.put("34");
-				jArr.put("33");
-				jArr.put("33");
-				jArr.put("34");
-				jArr.put("35");
-				jArr.put("34");
-				jArr.put("33");
-				jArr.put("33");
-				jArr.put("34");
-
-				JSONObject jObj = new JSONObject();
-				jObj.put("units", "degrees");
-				jObj.put("measurements", jArr);
-
-				jUberObj.put("temperature", jObj);
-			}
-
-			if (metricTypes.contains("oxygen_level")) {
-				JSONArray jArr = jMetric.get(counter++);
-				jArr.put("60");
-				jArr.put("61");
-				jArr.put("62");
-				jArr.put("61");
-				jArr.put("60");
-				jArr.put("60");
-				jArr.put("61");
-				jArr.put("62");
-				jArr.put("61");
-				jArr.put("60");
-
-				JSONObject jObj = new JSONObject();
-				jObj.put("units", "mm HG");
-				jObj.put("measurements", jArr);
-
-				jUberObj.put("oxygen_level", jObj);
-			}
-		}
-
-		return Response.status(200).entity(jUberObj.toString()).build();
 	}
 
 	@GET
@@ -413,52 +353,42 @@ public class ResourceController {
 	@Path("/astronaut/individual-health-status")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response fetchIndividualHealthStatus(@Context UriInfo ui){
-
 		MultivaluedMap<String, String> queryParams = ui.getQueryParameters();
 		String astronautName = queryParams.getFirst("astronautName");
 		astronautName = astronautName.replace("%20", " ");
 		String fileName = astronautFileDetails.get(astronautReverseDetails.get(astronautName));
-		
-		JSONObject jUberObj = new JSONObject();
-		JSONObject jObj = new JSONObject();
-		JSONArray jArr = new JSONArray();
-		
-		File file = new File(fileName);
-		int n_lines = 30;
-		int counter = 0;
-		try {
-			ReversedLinesFileReader object = new ReversedLinesFileReader(file);
-			String line = object.readLine();
-			while (!line.isEmpty() && counter < n_lines) {
-				System.out.println(line);
-				
-				jObj = new JSONObject();
-				String healthStatusStr[] = line.split(" "); 
-				jObj.put("ID", healthStatusStr[0]);
-				jObj.put("AstronautName", healthStatusStr[1]+" "+healthStatusStr[2]);
-				jObj.put(parameters.get(1), healthStatusStr[3].split(":")[1]);
-				jObj.put(parameters.get(2), healthStatusStr[15].split(":")[1]);
-				jObj.put(parameters.get(3), healthStatusStr[4].split(":")[1]);
-				jObj.put(parameters.get(4), healthStatusStr[5].split(":")[1]);
-				jObj.put(parameters.get(5), healthStatusStr[6].split(":")[1]);				
-				jObj.put(parameters.get(6), healthStatusStr[7].split(":")[1]);
-				jObj.put(parameters.get(7), healthStatusStr[8].split(":")[1]);
-				jObj.put(parameters.get(8), healthStatusStr[9].split(":")[1]);
-				jObj.put(parameters.get(9), healthStatusStr[10].split(":")[1]);
-				jObj.put(parameters.get(10), healthStatusStr[11].split(":")[1]);
-				
-				jObj.put("healthStatus", healthColorMap.get(Integer.parseInt(healthStatusStr[16])));
-				jArr.put(jObj);
-				
-				line = object.readLine();
-				counter++;
-			}
-			object.close();
-		}catch(Exception e) {
-			System.out.println("Exception caused");
+		JSONObject jUberObj = new JSONObject();	
+		JSONObject jObj = new JSONObject();	
+		JSONArray jArr = new JSONArray();		
+		File file = new File(fileName);	
+		int n_lines = 30;	
+		int counter = 0;	
+		try {	
+		ReversedLinesFileReader object = new ReversedLinesFileReader(file);	
+		String line = object.readLine();	
+		while (!line.isEmpty() && counter < n_lines) {	
+		System.out.println(line);		
+		jObj = new JSONObject();	
+		String healthStatusStr[] = line.split(" "); 	
+		int param = Integer.parseInt(healthStatusStr[0]);	
+		if(param == 13) {
+		counter++;	
+		line = object.readLine();
+		continue;
+		}else {
+		jObj.put("healthfactor", parameters.get(param));
 		}
-
-
+		jObj.put("time", healthStatusStr[1]);
+		jObj.put("healthvalue", healthStatusStr[2]);
+		jObj.put("healthStatus", healthStatusStr[3]);
+		jArr.put(jObj);
+		line = object.readLine();
+		counter++;
+		}
+		object.close();
+		}catch(Exception e) {
+		System.out.println("Exception caused");
+		}
 		jUberObj.put("health_data", jArr);
 		return Response.status(200).entity(jUberObj.toString()).build();
 	}
@@ -515,7 +445,7 @@ public class ResourceController {
 	@Path("/streaming_data/download")
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, "application/pdf"})
 	public Response getFile() {
-		File file = new File("/Users/hsandeep/Desktop/gitRepos/astroDataGen/Jersey-Jetty-Mysql-REST/src/main/resources/streamingData.txt");
+		File file = new File(FileLocationHandler.healthDataFile);
 
 	    Document document = new Document();
 	    BufferedReader br = null;
@@ -554,7 +484,7 @@ public class ResourceController {
 	@Produces("text/plain")
 	public Response getDataFile(@Context UriInfo ui) {
 		
-		 File file = new File(FileLocationHandler.historicalFileStorePath);  
+		 File file = new File(FileLocationHandler.healthDataFile);  
 		 ResponseBuilder response = Response.ok((Object) file);  
 		 response.header("Content-Disposition","attachment; filename=\"historical_data.txt\"");  
 		 return response.build();  
@@ -570,5 +500,206 @@ public class ResourceController {
 			myFile.delete();
 		}
 	}
+	
+	@GET
+	@Path("/parameter-status")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getParamData(@Context UriInfo ui) throws IOException {
+		MultivaluedMap<String, String> queryParams = ui.getQueryParameters();
+		int param = Integer.parseInt(queryParams.getFirst("parameter"));
+		
+		JSONObject jUberObj = new JSONObject();
+		JSONObject jObj = new JSONObject();
+		JSONArray jArr = new JSONArray();
+		int n_lines = 10;
+		int counter = 0;
+		File file = new File(FileLocationHandler.paramFile);
+		ReversedLinesFileReader object = new ReversedLinesFileReader(file);
+		String line = object.readLine();
+		while (!line.isEmpty() && counter < n_lines) {
+			System.out.println(line);
+			jObj = new JSONObject();
+			String healthStatusStr[] = line.split(" ");
+			jObj.put("AstronautName", healthStatusStr[0] + " " + healthStatusStr[1]);
+			jObj.put("time", healthStatusStr[2]);
+			jObj.put("healthvalue", healthStatusStr[param + 2].split(":")[1]);
+			jObj.put("healthStatus",
+					getParamstatus(healthStatusStr[param + 2].split(":")[0], healthStatusStr[param + 2].split(":")[1]));
+			jArr.put(jObj);
+			line = object.readLine();
+			counter++;
+		}
+		object.close();
+		jUberObj.put("health_data", jArr);
+		return Response.status(200).entity(jUberObj.toString()).build();
+	}
+	
+	private static boolean getParamstatus(String paramName, String paramValue) {
+		String range[] = (parameterRangeMap.get(paramName)).split(",");
+		int minRange = Integer.parseInt(range[0]);
+		int maxRange = Integer.parseInt(range[1]);
+		int actualVal = Integer.parseInt(paramValue);
+		if (actualVal >= minRange && actualVal <= maxRange) {
+			return true;
+		}
+		return false;
+	}
+	
+	@GET
+	@Path("/alarm-status")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response fetchAlarmStatus() {
+		JSONObject jUberObj = new JSONObject();
+		JSONArray jArr = new JSONArray();
+		String sCurrentLine = null;
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(FileLocationHandler.alarmFile));
+			while ((sCurrentLine = br.readLine()) != null) {
 
+				JSONObject jObj = new JSONObject();
+
+				String temp[] = sCurrentLine.split(":");
+
+				jObj.put(temp[0], temp[1]);
+
+				jArr.put(jObj);
+
+			}
+
+		} catch (Exception e) {
+
+			System.out.println("Exception caused");
+
+		}
+
+		jUberObj.put("alarm_data", jArr);
+
+		return Response.status(200).entity(jUberObj.toString()).build();
+	}
+	
+	@GET
+	@Path("/alarm-status-chart")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response fetchAlarmStatusChart() {
+		JSONObject jUberObj = new JSONObject();
+		JSONArray jArr = new JSONArray();
+		String sCurrentLine = null;
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(FileLocationHandler.alarmFile));
+			while ((sCurrentLine = br.readLine()) != null) {
+
+				JSONObject jObj = new JSONObject();
+
+				String temp[] = sCurrentLine.split(":");
+
+				jObj.put(temp[0], temp[1]);
+
+				jArr.put(jObj);
+
+			}
+
+		} catch (Exception e) {
+
+			System.out.println("Exception caused");
+
+		}
+
+		jUberObj.put("alarm_data", jArr);
+
+		return Response.status(200).entity(jUberObj.toString()).build();
+	}
+	
+	@GET
+	@Path("/health/astronaut-graph-data")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response fetchGraphData(@Context UriInfo ui) {
+		MultivaluedMap<String, String> queryParams = ui.getQueryParameters();
+		String astronautName = queryParams.getFirst("astronautName");
+		astronautName = astronautName.replace("%20", " ");
+		String fileName = astronautFileDetails.get(astronautReverseDetails.get(astronautName));
+		JSONObject jUberObj = new JSONObject();
+		Map<String, List<String>> parameters = new HashMap<>();
+		File file = new File(fileName);
+		int n_lines = 300;
+		int counter = 0;
+		ReversedLinesFileReader object = null;
+		try {
+			object = new ReversedLinesFileReader(file);
+			String line = object.readLine();
+			while (line != null && !line.isEmpty() && counter < n_lines) {
+				String[] params = line.split(" ");
+				List<String> values = null;
+				if (parameters.containsKey(parametersForGraph.get(params[0]))) {
+					values = parameters.get(parametersForGraph.get(params[0]));
+				} else {
+					values = new ArrayList<>();
+					values.add(parametersForGraph.get(params[0]));
+				}
+				values.add(params[2]);
+				parameters.put(parametersForGraph.get(params[0]), values);
+				line = object.readLine();
+				counter++;
+			}
+			object.close();
+			Set<String> set = parameters.keySet();
+			Iterator<String> it = set.iterator();
+			while (it.hasNext()) {
+				String key = it.next();
+				jUberObj.put(key, parameters.get(key));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Exception caused");
+		}
+		return Response.status(200).entity(jUberObj.toString()).build();
+	}
+	
+	@GET
+	@Path("/health/astronaut-graph-dashboard")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response fetchGraphDataDashboard(@Context UriInfo ui) {
+		MultivaluedMap<String, String> queryParams = ui.getQueryParameters();
+		String astronautName = queryParams.getFirst("astronautName");
+		astronautName = astronautName.replace("%20", " ");
+		String fileName = astronautFileDetails.get(astronautReverseDetails.get(astronautName));
+		JSONObject jUberObj = new JSONObject();
+		JSONArray jArr = new JSONArray();
+		Map<String, List<String>> parameters = new HashMap<>();
+		File file = new File(fileName);
+		int n_lines = 300;
+		int counter = 0;
+		ReversedLinesFileReader object = null;
+		try {
+			object = new ReversedLinesFileReader(file);
+			String line = object.readLine();
+			while (line != null && !line.isEmpty() && counter < n_lines) {
+				String[] params = line.split(" ");
+				List<String> values = null;
+				if (parameters.containsKey(parametersForGraph.get(params[0]))) {
+					values = parameters.get(parametersForGraph.get(params[0]));
+				} else {
+					values = new ArrayList<>();
+					values.add(parametersForGraph.get(params[0]));
+				}
+				values.add(params[2]);
+				parameters.put(parametersForGraph.get(params[0]), values);
+				line = object.readLine();
+				counter++;
+			}
+			object.close();
+			Set<String> set = parameters.keySet();
+			Iterator<String> it = set.iterator();
+			while (it.hasNext()) {
+				String key = it.next();
+				jArr.put(parameters.get(key));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Exception caused");
+		}
+		jUberObj.put("array", jArr);
+		return Response.status(200).entity(jUberObj.toString()).build();
+	}
 }
